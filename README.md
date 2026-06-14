@@ -1,4 +1,4 @@
-# Invoice Management
+# Invoice Generator
 
 A multi-user Invoice & Billing Portal designed for small businesses.
 
