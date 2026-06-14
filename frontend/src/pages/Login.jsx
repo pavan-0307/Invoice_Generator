@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Receipt, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Receipt, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFormValidation } from '../hooks/useFormValidation';
 
@@ -24,6 +24,7 @@ const Login = () => {
   
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const memoizedValidate = useCallback((vals) => validateLogin(vals), []);
 
@@ -69,7 +70,7 @@ const Login = () => {
   };
 
   const getInputClass = (fieldName) => {
-    const defaultClass = "block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors sm:text-sm";
+    const defaultClass = `block w-full pl-10 ${fieldName === 'password' ? 'pr-10' : 'pr-3'} py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors sm:text-sm`;
     if (!touched[fieldName]) {
       return `${defaultClass} focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500`;
     }
@@ -145,7 +146,7 @@ const Login = () => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
                   value={values.password}
@@ -154,6 +155,13 @@ const Login = () => {
                   className={getInputClass('password')}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-550 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
               {touched.password && errors.password && (
                 <p className="mt-1 text-xs text-rose-500">{errors.password}</p>

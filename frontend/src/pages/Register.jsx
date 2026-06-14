@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Receipt, Mail, Lock, User, Briefcase, AlertCircle, ArrowRight } from 'lucide-react';
+import { Receipt, Mail, Lock, User, Briefcase, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFormValidation } from '../hooks/useFormValidation';
 
@@ -58,6 +58,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const memoizedValidate = useCallback((vals) => validateRegister(vals), []);
 
@@ -118,7 +120,8 @@ const Register = () => {
   };
 
   const getInputClass = (fieldName) => {
-    const defaultClass = "block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors sm:text-sm";
+    const isPassword = fieldName === 'password' || fieldName === 'confirmPassword';
+    const defaultClass = `block w-full pl-10 ${isPassword ? 'pr-10' : 'pr-3'} py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors sm:text-sm`;
     if (!touched[fieldName]) {
       return `${defaultClass} focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500`;
     }
@@ -250,7 +253,7 @@ const Register = () => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={values.password}
                   onChange={handleChange}
@@ -258,6 +261,13 @@ const Register = () => {
                   className={getInputClass('password')}
                   placeholder="Min. 8 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-550 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
               {touched.password && errors.password && (
                 <p className="mt-1 text-xs text-rose-500 leading-normal">{errors.password}</p>
@@ -275,7 +285,7 @@ const Register = () => {
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={values.confirmPassword}
                   onChange={handleChange}
@@ -283,6 +293,13 @@ const Register = () => {
                   className={getInputClass('confirmPassword')}
                   placeholder="Repeat your password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-550 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="h-5 h-5" />}
+                </button>
               </div>
               {touched.confirmPassword && errors.confirmPassword && (
                 <p className="mt-1 text-xs text-rose-500">{errors.confirmPassword}</p>
