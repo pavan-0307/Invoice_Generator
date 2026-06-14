@@ -5,16 +5,17 @@ import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../services/currency';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../components/common/ConfirmationModal';
-import { 
-  Plus, 
-  Search, 
-  Eye, 
-  Trash2, 
-  AlertCircle,
-  FileText,
-  Filter,
-  Calendar
-} from 'lucide-react';
+import { Plus, Search, Eye, Trash2, AlertCircle, FileText, Filter, Calendar } from 'lucide-react';
+
+const STATUS_FILTERS = ['All', 'Draft', 'Pending', 'Partially Paid', 'Paid', 'Overdue'];
+
+const statusBadge = {
+  Paid: 'badge-paid',
+  Pending: 'badge-pending',
+  'Partially Paid': 'badge-partial',
+  Overdue: 'badge-overdue',
+  Draft: 'badge-draft',
+};
 
 const Invoices = () => {
   const { user } = useAuth();
@@ -26,24 +27,16 @@ const Invoices = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [search, statusFilter]);
+  useEffect(() => { fetchInvoices(); }, [search, statusFilter]);
 
   const fetchInvoices = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/invoices?search=${encodeURIComponent(search)}&status=${encodeURIComponent(statusFilter)}`);
-      if (response.data.success) {
-        setInvoices(response.data.invoices);
-      } else {
-        setError('Failed to fetch invoices.');
-      }
-    } catch (err) {
-      setError('Connection failed. Please ensure the backend server is running.');
-    } finally {
-      setLoading(false);
-    }
+      if (response.data.success) { setInvoices(response.data.invoices); }
+      else { setError('Failed to fetch invoices.'); }
+    } catch (err) { setError('Connection failed. Please ensure the backend server is running.'); }
+    finally { setLoading(false); }
   };
 
   const handleDeleteInvoice = async (id) => {
@@ -56,190 +49,133 @@ const Invoices = () => {
         setDeletingId(null);
       } else {
         const msg = response.data.message || 'Failed to delete invoice.';
-        setError(msg);
-        toast.error(msg);
+        setError(msg); toast.error(msg);
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Error occurred while deleting invoice.';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const statusColors = {
-    Paid: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30',
-    Pending: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/30',
-    'Partially Paid': 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 border-amber-200 dark:border-amber-900/30',
-    Overdue: 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-450 border-rose-200 dark:border-rose-900/30',
-    Draft: 'bg-slate-100 text-slate-650 dark:bg-slate-800/40 dark:text-slate-400 border-slate-200 dark:border-slate-850'
-  };
-
-  const getStatusBadge = (status) => {
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColors[status] || 'bg-slate-100'}`}>
-        {status}
-      </span>
-    );
+      setError(msg); toast.error(msg);
+    } finally { setIsDeleting(false); }
   };
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      {/* Header and Create Button */}
+    <div className="p-6 space-y-5 animate-fade-in">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Invoices</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage billing, draft payments, and track receivables.</p>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Invoices</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage billing, payments, and receivables.</p>
         </div>
-        <Link
-          to="/invoices/new"
-          className="flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-brand-500/10 transition-all cursor-pointer animate-fade-in"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Invoice</span>
+        <Link to="/invoices/new" className="btn-primary">
+          <Plus className="w-4 h-4" /> Create Invoice
         </Link>
       </div>
 
       {error && (
-        <div className="bg-rose-50 dark:bg-rose-950/20 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start space-x-3">
-          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-          <span className="text-sm text-rose-800 dark:text-rose-350">{error}</span>
+        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-700 dark:text-rose-400 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{error}
         </div>
       )}
 
-      {/* Filters and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 p-4 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* Search Field */}
-          <div className="w-full md:flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-4.5 w-4.5 text-slate-450" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by invoice number or client name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors sm:text-sm"
-            />
+      {/* Filters */}
+      <div className="card p-4 space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input type="text" placeholder="Search by invoice number or client name..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="input pl-10" />
           </div>
-
-          {/* Filter Dropdown */}
-          <div className="w-full md:w-48 relative flex items-center space-x-2">
+          <div className="md:w-44 flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="block w-full py-2 px-3 border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 sm:text-sm"
-            >
-              <option value="All">All Invoices</option>
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Partially Paid">Partially Paid</option>
-              <option value="Paid">Paid</option>
-              <option value="Overdue">Overdue</option>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="input">
+              {STATUS_FILTERS.map(s => <option key={s} value={s}>{s === 'All' ? 'All Invoices' : s}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Status Pill Filters */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-          {['All', 'Draft', 'Pending', 'Partially Paid', 'Paid', 'Overdue'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`
-                px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer
-                ${statusFilter === status 
-                  ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/10' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'}
-              `}
-            >
-              {status}
+        {/* Status pills */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          {STATUS_FILTERS.map(s => (
+            <button key={s} onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === s
+                  ? 'bg-brand-500 text-white shadow-brand'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+              }`}>
+              {s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Invoices Table layout */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
+      {/* Table */}
+      <div className="card overflow-hidden">
         {loading && invoices.length === 0 ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
+            <span className="w-8 h-8 border-2 border-brand-200 border-t-brand-500 rounded-full animate-spin" />
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50/50 dark:bg-slate-800/10 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-150 dark:border-slate-800">
-                  <th className="px-6 py-4">Invoice #</th>
-                  <th className="px-6 py-4">Client</th>
-                  <th className="px-6 py-4">Invoice Date</th>
-                  <th className="px-6 py-4">Due Date</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Grand Total</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                <tr className="bg-slate-50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                  <th className="tbl-head">Invoice #</th>
+                  <th className="tbl-head">Client</th>
+                  <th className="tbl-head">Invoice Date</th>
+                  <th className="tbl-head">Due Date</th>
+                  <th className="tbl-head">Status</th>
+                  <th className="tbl-head">Grand Total</th>
+                  <th className="tbl-head text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {invoices.length > 0 ? (
-                  invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
-                      <td className="px-6 py-4.5 font-bold text-slate-900 dark:text-white">
-                        <Link to={`/invoices/${inv.id}`} className="hover:text-brand-600 transition-colors">
-                          {inv.invoice_number}
+              <tbody>
+                {invoices.length > 0 ? invoices.map(inv => (
+                  <tr key={inv.id} className="tbl-row">
+                    <td className="tbl-cell font-bold text-slate-900 dark:text-white">
+                      <Link to={`/invoices/${inv.id}`} className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                        {inv.invoice_number}
+                      </Link>
+                    </td>
+                    <td className="tbl-cell font-medium">{inv.client_name}</td>
+                    <td className="tbl-cell">
+                      <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <Calendar className="w-3.5 h-3.5" />{new Date(inv.invoice_date).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="tbl-cell">
+                      <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <Calendar className="w-3.5 h-3.5" />{new Date(inv.due_date).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="tbl-cell">
+                      <span className={statusBadge[inv.status] || 'badge-draft'}>{inv.status}</span>
+                    </td>
+                    <td className="tbl-cell font-bold text-slate-900 dark:text-white text-base">
+                      {formatCurrency(inv.grand_total, user?.settings?.default_currency)}
+                    </td>
+                    <td className="tbl-cell text-right no-print">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link to={`/invoices/${inv.id}`}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                          title="View">
+                          <Eye className="w-4 h-4" />
                         </Link>
-                      </td>
-                      <td className="px-6 py-4.5 text-slate-700 dark:text-slate-300 font-medium">{inv.client_name}</td>
-                      <td className="px-6 py-4.5 text-slate-500 dark:text-slate-450 text-xs">
-                        <span className="flex items-center space-x-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{new Date(inv.invoice_date).toLocaleDateString()}</span>
-                        </span>
-                      </td>
-                      <td className="px-6 py-4.5 text-slate-500 dark:text-slate-450 text-xs">
-                        <span className="flex items-center space-x-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{new Date(inv.due_date).toLocaleDateString()}</span>
-                        </span>
-                      </td>
-                      <td className="px-6 py-4.5">{getStatusBadge(inv.status)}</td>
-                      <td className="px-6 py-4.5 font-bold text-slate-905 dark:text-white text-base">
-                        {formatCurrency(inv.grand_total, user?.settings?.default_currency)}
-                      </td>
-                      <td className="px-6 py-4.5 text-right no-print">
-                        <div className="flex items-center justify-end space-x-1.5">
-                          <Link 
-                            to={`/invoices/${inv.id}`}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="w-4.5 h-4.5" />
-                          </Link>
-                          <button 
-                            onClick={() => setDeletingId(inv.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
-                            title="Delete Invoice"
-                          >
-                            <Trash2 className="w-4.5 h-4.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+                        <button onClick={() => setDeletingId(inv.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                          title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
                   <tr>
-                    <td colSpan="7" className="px-6 py-16 text-center text-slate-450">
-                      <FileText className="w-12 h-12 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
-                      <h3 className="font-semibold text-slate-700 dark:text-slate-300">No invoices created yet.</h3>
-                      <p className="text-xs text-slate-400 mt-1">Create a new invoice to start billing.</p>
-                      <Link 
-                        to="/invoices/new" 
-                        className="mt-4 inline-flex items-center space-x-1 px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Create Invoice</span>
+                    <td colSpan="7" className="py-16 text-center">
+                      <FileText className="w-10 h-10 text-slate-200 dark:text-slate-800 mx-auto mb-3" />
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No invoices found</p>
+                      <p className="text-xs text-slate-400 mt-1 mb-4">Create a new invoice to start billing.</p>
+                      <Link to="/invoices/new" className="btn-primary mx-auto text-xs px-4 py-2">
+                        <Plus className="w-3.5 h-3.5" /> Create Invoice
                       </Link>
                     </td>
                   </tr>

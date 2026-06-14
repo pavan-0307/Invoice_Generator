@@ -271,48 +271,39 @@ const InvoiceCreate = () => {
   const isFormValid = Object.keys(errors).length === 0;
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto animate-fade-in">
-      {/* Upper navigation header */}
-      <div className="flex items-center space-x-3">
-        <Link 
-          to="/invoices" 
-          className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 text-slate-505 hover:text-slate-800 transition-colors"
-        >
+    <div className="p-6 space-y-5 max-w-5xl mx-auto animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Link to="/invoices" className="p-2 card hover:shadow-card-md transition-shadow text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Create New Invoice</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Create New Invoice</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Generate a billing template for a business client.</p>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-50 dark:bg-rose-955/20 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start space-x-3">
-          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-          <span className="text-sm text-rose-800 dark:text-rose-350 font-medium">{error}</span>
+        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-700 dark:text-rose-400 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{error}
         </div>
       )}
 
       {loadingClients ? (
-        <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-slate-200/60 dark:border-slate-800/80">
-          <div className="w-8 h-8 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto"></div>
+        <div className="card p-12 text-center">
+          <span className="w-8 h-8 border-2 border-brand-200 border-t-brand-500 rounded-full animate-spin inline-block" />
         </div>
       ) : clients.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-350 dark:border-slate-800 py-16 text-center rounded-2xl">
-          <Users className="w-12 h-12 text-slate-355 dark:text-slate-700 mx-auto mb-4" />
-          <h3 className="text-slate-750 dark:text-slate-300 font-semibold text-lg">No clients available</h3>
-          <p className="text-slate-450 dark:text-slate-500 text-sm mt-1 mb-5">You must create a client profile before issuing an invoice.</p>
-          <Link 
-            to="/clients"
-            className="px-4 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition-colors"
-          >
-            Create First Client
-          </Link>
+        <div className="card p-16 text-center">
+          <Users className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+          <h3 className="font-semibold text-slate-700 dark:text-slate-300">No clients available</h3>
+          <p className="text-slate-400 text-sm mt-1 mb-4">You must create a client profile before issuing an invoice.</p>
+          <Link to="/clients" className="btn-primary mx-auto text-sm">Create First Client</Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Main Invoice Card Sheet */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Main Invoice Card */}
+          <div className="card p-6 space-y-6">
             
             {/* Upper Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -536,23 +527,17 @@ const InvoiceCreate = () => {
 
           </div>
 
-          {/* Form Action Controls */}
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              disabled={submitting}
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3">
+            <button type="button" disabled={submitting}
               onClick={() => !submitting && navigate('/invoices')}
-              className="px-5 py-2.5 border border-slate-250 dark:border-slate-850 text-slate-505 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={!isFormValid || submitting}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-75 cursor-pointer shadow-md shadow-brand-500/10 disabled:cursor-not-allowed"
-            >
+            <button type="submit" disabled={!isFormValid || submitting}
+              className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">
               <Save className="w-4 h-4" />
-              <span>{submitting ? 'Creating...' : 'Save & Close'}</span>
+              {submitting ? 'Creating...' : 'Save & Close'}
             </button>
           </div>
         </form>

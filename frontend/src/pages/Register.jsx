@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Receipt, Mail, Lock, User, Briefcase, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Receipt, Mail, Lock, User, Briefcase, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFormValidation } from '../hooks/useFormValidation';
 
 const validateRegister = (values) => {
   const errors = {};
-  
   if (!values.businessName) {
     errors.businessName = 'Business name is required';
   } else if (values.businessName.length < 3) {
@@ -15,7 +14,6 @@ const validateRegister = (values) => {
   } else if (values.businessName.length > 100) {
     errors.businessName = 'Business name must not exceed 100 characters';
   }
-
   if (!values.ownerName) {
     errors.ownerName = 'Owner name is required';
   } else if (values.ownerName.length < 3) {
@@ -23,13 +21,11 @@ const validateRegister = (values) => {
   } else if (!/^[a-zA-Z\s]+$/.test(values.ownerName)) {
     errors.ownerName = 'Owner name must contain only alphabets and spaces';
   }
-
   if (!values.email) {
     errors.email = 'Please enter your email';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
     errors.email = 'Please enter a valid email address';
   }
-
   if (!values.password) {
     errors.password = 'Password must contain at least 8 characters, one uppercase letter, one number and one special character';
   } else {
@@ -41,20 +37,25 @@ const validateRegister = (values) => {
       errors.password = 'Password must contain at least 8 characters, one uppercase letter, one number and one special character';
     }
   }
-
   if (!values.confirmPassword) {
     errors.confirmPassword = 'Confirm password is required';
   } else if (values.confirmPassword !== values.password) {
     errors.confirmPassword = 'Confirm Password must match Password';
   }
-
   return errors;
 };
+
+const Field = ({ label, children, error, touched }) => (
+  <div>
+    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>
+    {children}
+    {touched && error && <p className="mt-1 text-xs text-rose-500">{error}</p>}
+  </div>
+);
 
 const Register = () => {
   const { register, login } = useAuth();
   const navigate = useNavigate();
-
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -62,22 +63,8 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const memoizedValidate = useCallback((vals) => validateRegister(vals), []);
-
-  const {
-    values,
-    errors,
-    touched,
-    isValid,
-    handleChange,
-    handleBlur,
-  } = useFormValidation(
-    {
-      businessName: '',
-      ownerName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
+  const { values, errors, touched, isValid, handleChange, handleBlur } = useFormValidation(
+    { businessName: '', ownerName: '', email: '', password: '', confirmPassword: '' },
     memoizedValidate
   );
 
@@ -85,18 +72,13 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
     if (!isValid) return;
-
     setSubmitting(true);
     try {
       const result = await register(values.businessName, values.ownerName, values.email, values.password);
-
       if (result.success) {
         toast.success('Registration Successful');
         setSuccess('Account created! Logging you in...');
-        
-        // Auto-login after registration
         const loginResult = await login(values.email, values.password);
         setSubmitting(false);
         if (loginResult.success) {
@@ -119,203 +101,141 @@ const Register = () => {
     }
   };
 
-  const getInputClass = (fieldName) => {
-    const isPassword = fieldName === 'password' || fieldName === 'confirmPassword';
-    const defaultClass = `block w-full pl-10 ${isPassword ? 'pr-10' : 'pr-3'} py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-750 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors sm:text-sm`;
-    if (!touched[fieldName]) {
-      return `${defaultClass} focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500`;
-    }
-    if (errors[fieldName]) {
-      return `${defaultClass} border-rose-500 dark:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500`;
-    }
-    return `${defaultClass} border-emerald-500 dark:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500`;
+  const inputCls = (field) => {
+    const base = 'input pl-10';
+    if (!touched[field]) return base;
+    return errors[field] ? 'input-error pl-10' : `${base} border-brand-500 focus:ring-brand-500/30`;
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-xl shadow-brand-500/25">
-            <Receipt className="w-6.5 h-6.5" />
+    <div className="min-h-screen flex">
+      {/* ── Left Brand Panel ── */}
+      <div className="hidden lg:flex lg:w-[40%] flex-col justify-between p-12" style={{ background: '#0b1120' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center shadow-brand">
+            <Receipt className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-xl tracking-tight leading-none">ClearLedger</p>
+            <p className="text-slate-500 text-xs">Invoice Management</p>
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white font-display tracking-tight">
-          Create your portal account
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300">
-            Sign in here
-          </Link>
-        </p>
+
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-semibold">
+              ✦ Free to get started
+            </span>
+            <h1 className="text-3xl font-bold text-white leading-tight tracking-tight">
+              Start managing<br />
+              <span className="text-brand-400">your business.</span>
+            </h1>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+              Join thousands of small business owners who use ClearLedger to manage invoices, clients, and payments — all in one place.
+            </p>
+          </div>
+          <ul className="space-y-2.5">
+            {['Unlimited invoice creation', 'Multi-client management', 'Real-time payment tracking', 'Financial reports & exports'].map(f => (
+              <li key={f} className="flex items-center gap-3 text-slate-300 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="text-slate-600 text-xs">© 2026 ClearLedger. All rights reserved.</p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-xl border border-slate-200/50 dark:border-slate-800/80 sm:rounded-2xl sm:px-10">
-          <form className="space-y-5" onSubmit={handleSubmit}>
+      {/* ── Right Form Panel ── */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 overflow-y-auto">
+        <div className="w-full max-w-md py-8 animate-fade-in">
+          <div className="flex items-center gap-2.5 mb-6 lg:hidden">
+            <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center shadow-brand">
+              <Receipt className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-slate-900 dark:text-white font-bold text-xl tracking-tight">ClearLedger</span>
+          </div>
+
+          <div className="mb-7">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Create your account</h2>
+            <p className="mt-1 text-slate-500 dark:text-slate-400 text-sm">
+              Already have an account?{' '}
+              <Link to="/login" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">Sign in</Link>
+            </p>
+          </div>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-rose-50 dark:bg-rose-950/20 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                <span className="text-sm text-rose-800 dark:text-rose-350">{error}</span>
+              <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-700 dark:text-rose-400 text-sm">
+                <span className="shrink-0 mt-0.5">⚠</span>
+                <span>{error}</span>
               </div>
             )}
-
             {success && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/20 border-l-4 border-emerald-500 p-4 rounded-r-lg flex items-start space-x-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 animate-ping"></div>
-                <span className="text-sm text-emerald-800 dark:text-emerald-350 font-medium">{success}</span>
+              <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                <span>{success}</span>
               </div>
             )}
 
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-slate-700 dark:text-slate-350">
-                Business Name
-              </label>
-              <div className="mt-1.5 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Briefcase className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="businessName"
-                  name="businessName"
-                  type="text"
-                  required
-                  value={values.businessName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={getInputClass('businessName')}
-                  placeholder="Acme Corporation"
-                />
+            <Field label="Business Name" error={errors.businessName} touched={touched.businessName}>
+              <div className="relative">
+                <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input id="businessName" name="businessName" type="text" required value={values.businessName}
+                  onChange={handleChange} onBlur={handleBlur} className={inputCls('businessName')} placeholder="Acme Corporation" />
               </div>
-              {touched.businessName && errors.businessName && (
-                <p className="mt-1 text-xs text-rose-500">{errors.businessName}</p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="ownerName" className="block text-sm font-medium text-slate-700 dark:text-slate-350">
-                Owner Name
-              </label>
-              <div className="mt-1.5 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="ownerName"
-                  name="ownerName"
-                  type="text"
-                  required
-                  value={values.ownerName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={getInputClass('ownerName')}
-                  placeholder="John Doe"
-                />
+            <Field label="Owner Name" error={errors.ownerName} touched={touched.ownerName}>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input id="ownerName" name="ownerName" type="text" required value={values.ownerName}
+                  onChange={handleChange} onBlur={handleBlur} className={inputCls('ownerName')} placeholder="John Doe" />
               </div>
-              {touched.ownerName && errors.ownerName && (
-                <p className="mt-1 text-xs text-rose-500">{errors.ownerName}</p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-350">
-                Email Address
-              </label>
-              <div className="mt-1.5 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={values.email}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={getInputClass('email')}
-                  placeholder="john@example.com"
-                />
+            <Field label="Email Address" error={errors.email} touched={touched.email}>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input id="email" name="email" type="email" required value={values.email}
+                  onChange={handleChange} onBlur={handleBlur} className={inputCls('email')} placeholder="john@example.com" />
               </div>
-              {touched.email && errors.email && (
-                <p className="mt-1 text-xs text-rose-500">{errors.email}</p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-350">
-                Password
-              </label>
-              <div className="mt-1.5 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={values.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={getInputClass('password')}
-                  placeholder="Min. 8 characters"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-550 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            <Field label="Password" error={errors.password} touched={touched.password}>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} required
+                  value={values.password} onChange={handleChange} onBlur={handleBlur}
+                  className={`${inputCls('password')} pr-10`} placeholder="Min. 8 chars, 1 upper, 1 number, 1 special" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {touched.password && errors.password && (
-                <p className="mt-1 text-xs text-rose-500 leading-normal">{errors.password}</p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-350">
-                Confirm Password
-              </label>
-              <div className="mt-1.5 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={values.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={getInputClass('confirmPassword')}
-                  placeholder="Repeat your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-550 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="h-5 h-5" />}
+            <Field label="Confirm Password" error={errors.confirmPassword} touched={touched.confirmPassword}>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} required
+                  value={values.confirmPassword} onChange={handleChange} onBlur={handleBlur}
+                  className={`${inputCls('confirmPassword')} pr-10`} placeholder="Repeat your password" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-xs text-rose-500">{errors.confirmPassword}</p>
-              )}
-            </div>
+            </Field>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={!isValid || submitting}
-                className="w-full flex justify-center items-center space-x-2 py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 transition-all shadow-md shadow-brand-500/10 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <span>{submitting ? 'Creating account...' : 'Create Account'}</span>
-                {!submitting && <ArrowRight className="w-4.5 h-4.5" />}
-              </button>
-            </div>
+            <button type="submit" disabled={!isValid || submitting}
+              className="btn-primary w-full py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              {submitting ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account...</>
+              ) : (
+                <>Create Account <ArrowRight className="w-4 h-4" /></>
+              )}
+            </button>
           </form>
         </div>
       </div>

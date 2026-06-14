@@ -20,7 +20,7 @@ import Settings from './pages/Settings';
 
 const ProtectedLayout = ({ children }) => {
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <main className="flex-1 min-w-0 overflow-y-auto">
         {children}
@@ -129,12 +129,12 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
 
-        {/* Global Connection status floating indicator */}
+        {/* Backend connection indicator */}
         <div className="fixed bottom-4 right-4 z-[9999] no-print">
           {apiStatus === 'unreachable' && (
-            <div className="flex items-center space-x-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-455 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-rose-500/5 backdrop-blur-sm transition-all duration-300">
-              <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></div>
-              <span>Backend Not Reachable</span>
+            <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              Backend Not Reachable
             </div>
           )}
         </div>

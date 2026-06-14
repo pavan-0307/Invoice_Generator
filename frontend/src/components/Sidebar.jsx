@@ -2,153 +2,167 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  BarChart3, 
-  LogOut, 
-  Sun, 
-  Moon, 
-  Menu, 
-  X, 
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  BarChart3,
+  Settings,
+  LogOut,
+  Menu,
+  X,
   Receipt,
-  Settings
+  ChevronRight,
 } from 'lucide-react';
 
+const navigation = [
+  { name: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Clients',    href: '/clients',   icon: Users },
+  { name: 'Invoices',   href: '/invoices',  icon: FileText },
+  { name: 'Reports',    href: '/reports',   icon: BarChart3 },
+  { name: 'Settings',   href: '/settings',  icon: Settings },
+];
+
+const getInitials = (name = '') =>
+  name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+
 const Sidebar = () => {
-  const { user, logout, darkMode, toggleDarkMode } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const logoUrl = user?.settings?.logo_path ? `${import.meta.env.VITE_API_URL}/${user.settings.logo_path}` : null;
-
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Clients', href: '/clients', icon: Users },
-    { name: 'Invoices', href: '/invoices', icon: FileText },
-    { name: 'Reports', href: '/reports', icon: BarChart3 },
-    { name: 'Settings', href: '/settings', icon: Settings },
-  ];
+  const logoUrl = user?.settings?.logo_path
+    ? `${import.meta.env.VITE_API_URL}/${user.settings.logo_path}`
+    : null;
 
   const handleLogout = async () => {
     await logout();
-    toast.success('Logout Successful');
+    toast.success('Signed out successfully');
     navigate('/login');
   };
 
-  const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(path + '/');
+
+  const NavItem = ({ item }) => {
+    const active = isActive(item.href);
+    return (
+      <Link
+        to={item.href}
+        onClick={() => setIsOpen(false)}
+        title={item.name}
+        className={`
+          group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+          transition-all duration-150 select-none
+          ${active
+            ? 'bg-brand-500/15 text-brand-400'
+            : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
+          }
+        `}
+      >
+        {/* Active left indicator */}
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-brand-400 rounded-r-full" />
+        )}
+        <item.icon className={`w-5 h-5 shrink-0 ${active ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+        <span>{item.name}</span>
+        {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-brand-400/60" />}
+      </Link>
+    );
   };
 
-  return (
-    <>
-      {/* Mobile top navigation bar */}
-      <div className="lg:hidden flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-40 no-print">
-        <div className="flex items-center space-x-2">
-          {logoUrl ? (
-            <img 
-              src={logoUrl} 
-              alt="Business Logo" 
-              className="w-8 h-8 rounded-lg object-contain bg-white border border-slate-200 dark:border-slate-800 p-0.5" 
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white">
-              <Receipt className="w-5 h-5" />
-            </div>
-          )}
-          <span className="font-bold text-lg text-slate-800 dark:text-white font-display">Invoive</span>
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full" style={{ background: '#0b1120' }}>
+      {/* ── Brand Header ── */}
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/5">
+        {logoUrl ? (
+          <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10 p-1" />
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-brand shrink-0">
+            <Receipt className="w-4.5 h-4.5 text-white" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-white font-bold text-base leading-tight tracking-tight truncate">ClearLedger</p>
+          <p className="text-slate-500 text-xs font-medium truncate">Invoice Portal</p>
         </div>
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-md text-slate-500 hover:text-slate-600 focus:outline-none"
+          onClick={() => setIsOpen(false)}
+          className="lg:hidden ml-auto p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5"
         >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* ── Business Info ── */}
+      {user && (
+        <div className="px-4 py-3 mx-3 mt-3 rounded-xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center shrink-0">
+              <span className="text-brand-400 text-xs font-bold">{getInitials(user.business_name)}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-slate-200 text-xs font-semibold truncate">{user.business_name}</p>
+              <p className="text-slate-500 text-xs truncate">{user.owner_name}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Navigation ── */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest text-slate-600">Menu</p>
+        {navigation.map(item => <NavItem key={item.name} item={item} />)}
+      </nav>
+
+      {/* ── Footer ── */}
+      <div className="px-3 py-4 border-t border-white/5 space-y-1">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                     text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-150"
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* ── Mobile Top Bar ── */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-navy-900 border-b border-white/5 sticky top-0 z-40 no-print" style={{ background: '#0b1120' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center">
+            <Receipt className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white font-bold text-base tracking-tight">ClearLedger</span>
+        </div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* ── Desktop Sidebar ── */}
       <aside className={`
-        fixed top-0 bottom-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen no-print
+        fixed top-0 left-0 bottom-0 z-50 w-60
+        lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
+        transition-transform duration-300 no-print
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div>
-          {/* Header Branding */}
-          <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt="Business Logo" 
-                  className="w-9 h-9 rounded-xl object-contain bg-white border border-slate-205 dark:border-slate-800 p-0.5 shadow-sm" 
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-                  <Receipt className="w-5.5 h-5.5" />
-                </div>
-              )}
-              <span className="font-bold text-xl text-slate-850 dark:text-white font-display tracking-tight">Invoive</span>
-            </div>
-            <button 
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <X className="w-5 h-5 text-slate-500" />
-            </button>
-          </div>
-
-          {/* User Business Details */}
-          {user && (
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/10">
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Business</p>
-              <h4 className="font-semibold text-slate-800 dark:text-slate-200 truncate">{user.business_name}</h4>
-              <p className="text-xs text-slate-500 truncate">{user.owner_name}</p>
-            </div>
-          )}
-
-          {/* Main Links */}
-          <nav className="px-4 py-6 space-y-1.5">
-            {navigation.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`
-                    flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                    ${active 
-                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/30 dark:text-brand-400 font-semibold' 
-                      : 'text-slate-650 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-100'}
-                  `}
-                >
-                  <item.icon className={`w-5 h-5 ${active ? 'text-brand-600 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`} />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Footer controls & Profile actions */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20 transition-all"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Sign Out</span>
-          </button>
-        </div>
+        <SidebarContent />
       </aside>
 
-      {/* Overlay background for open mobile side bar */}
+      {/* ── Mobile Overlay ── */}
       {isOpen && (
-        <div 
+        <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 lg:hidden no-print"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
         />
       )}
     </>
